@@ -1,0 +1,1 @@
+initSidebarItems({"type":[["c_char",""],["wchar_t",""]]});
