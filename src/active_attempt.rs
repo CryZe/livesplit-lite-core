@@ -3,6 +3,7 @@ use attempt::Attempt;
 use stopwatch::Stopwatch;
 use segment_attempt::SegmentAttempt;
 use chrono::Duration;
+use std::rc::Rc;
 
 #[derive(Eq, PartialEq)]
 pub enum AttemptState {
@@ -13,15 +14,15 @@ pub enum AttemptState {
 
 use self::AttemptState::*;
 
-pub struct ActiveAttempt<'splits> {
-    state: AttemptState,
-    split_index: usize,
-    attempt: Attempt<'splits>,
-    stopwatch: Stopwatch,
+pub struct ActiveAttempt {
+    pub state: AttemptState,
+    pub split_index: usize,
+    pub attempt: Attempt,
+    pub stopwatch: Stopwatch,
 }
 
-impl<'splits> ActiveAttempt<'splits> {
-    pub fn new(splits: &Splits, id: usize) -> ActiveAttempt {
+impl ActiveAttempt {
+    pub fn new(splits: Rc<Splits>, id: usize) -> ActiveAttempt {
         ActiveAttempt {
             state: NotRunning,
             split_index: 0,
@@ -34,6 +35,13 @@ impl<'splits> ActiveAttempt<'splits> {
         self.state == Running
     }
 
+    pub fn is_started(&self) -> bool {
+        match self.state {
+            NotRunning => false,
+            _ => true,
+        }
+    }
+
     pub fn get_current_segment(&self) -> Option<&SegmentAttempt> {
         if self.is_running() {
             Some(&self.attempt.segments[self.split_index])
@@ -43,8 +51,10 @@ impl<'splits> ActiveAttempt<'splits> {
     }
 
     pub fn start(&mut self) {
-        self.stopwatch.start();
-        self.state = Running;
+        if self.state == NotRunning {
+            self.stopwatch.start();
+            self.state = Running;
+        }
     }
 
     fn move_to_next_segment(&mut self, time: Option<Duration>) -> Option<&SegmentAttempt> {
@@ -89,7 +99,7 @@ impl<'splits> ActiveAttempt<'splits> {
         }
     }
 
-    pub fn reset(self) -> Attempt<'splits> {
+    pub fn reset(self) -> Attempt {
         self.attempt
     }
 }

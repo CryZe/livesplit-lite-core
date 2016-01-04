@@ -2,14 +2,15 @@ extern crate chrono;
 
 use segment::Segment;
 use self::chrono::Duration;
+use std::rc::Rc;
 
-pub struct SegmentAttempt<'segment> {
-    pub segment: &'segment Segment,
+pub struct SegmentAttempt {
+    pub segment: Rc<Segment>,
     pub time: Option<Duration>,
 }
 
-impl<'segment> SegmentAttempt<'segment> {
-    pub fn new(segment: &'segment Segment) -> SegmentAttempt {
+impl SegmentAttempt {
+    pub fn new(segment: Rc<Segment>) -> SegmentAttempt {
         SegmentAttempt {
             segment: segment,
             time: None,
